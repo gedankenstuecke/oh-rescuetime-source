@@ -74,7 +74,7 @@ if REMOTE is True:
 
 # This creates a Realm called "source" that allows 60 requests per minute maximum.
 rr = RespectfulRequester()
-rr.register_realm("Source", max_requests=60, timespan=60)
+rr.register_realm("moves", max_requests=60, timespan=60)
 
 # Applications installed
 INSTALLED_APPS = [
@@ -101,11 +101,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     # Simplified static file serving.
     # https://warehouse.python.org/project/whitenoise/
     'whitenoise.middleware.WhiteNoiseMiddleware'
-)
+]
 
 ROOT_URLCONF = 'demotemplate.urls'
 
@@ -149,20 +149,20 @@ DATABASES['default'].update(db_from_env)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 UserAttributeSimilarityValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'UserAttributeSimilarityValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 MinimumLengthValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'MinimumLengthValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 CommonPasswordValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'CommonPasswordValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 NumericPasswordValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'NumericPasswordValidator'),
     },
 ]
 

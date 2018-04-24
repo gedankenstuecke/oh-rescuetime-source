@@ -5,145 +5,121 @@ These tasks:
   2. adds a data file
 """
 import logging
-import os
 import json
-import shutil
 import tempfile
-from django.utils import lorem_ipsum
-import textwrap
 import requests
+import os
 from celery import shared_task
 from django.conf import settings
 from open_humans.models import OpenHumansMember
-from datetime import datetime
+from datetime import datetime, timedelta
+from demotemplate.settings import rr
+from requests_respectful import RequestsRespectfulRateLimitedError
+from ohapi import api
 
 # Set up logging.
 logger = logging.getLogger(__name__)
 
+MOVES_API_BASE = 'https://api.moves-app.com/api/1.1'
+MOVES_API_STORY = MOVES_API_BASE + '/user/storyline/daily'
+
 
 @shared_task
-def xfer_to_open_humans(oh_id, num_submit=0, logger=None, **kwargs):
+def process_moves(oh_id):
     """
-    Transfer data to Open Humans.
-    num_submit is an optional parameter in case you want to resubmit failed
-    tasks (see comments in code).
+    Update the moves file for a given OH user
     """
-    print('Trying to copy data for {} to Open Humans'.format(oh_id))
+    print('Starting moves processing for {}'.format(oh_id))
     oh_member = OpenHumansMember.objects.get(oh_id=oh_id)
+    oh_access_token = oh_member.get_access_token(
+                                    client_id=settings.OPENHUMANS_CLIENT_ID,
+                                    client_secret=settings.OPENHUMANS_CLIENT_SECRET)
+    moves_data = get_existing_moves(oh_access_token)
+    moves_member = oh_member.datasourcemember
+    moves_access_token = moves_member.get_access_token(
+                            client_id=settings.MOVES_CLIENT_ID,
+                            client_secret=settings.MOVES_CLIENT_SECRET)
+    update_moves(oh_member, moves_access_token, moves_data)
 
-    # Make a tempdir for all temporary files.
-    # Delete this even if an exception occurs.
-    tempdir = tempfile.mkdtemp()
+
+def update_moves(oh_member, moves_access_token, moves_data):
     try:
-        add_data_to_open_humans(oh_member, tempdir)
+        start_date = get_start_date(moves_data, moves_access_token)
+        start_date = datetime.strptime(start_date, "%Y%m%d")
+        start_date_iso = start_date.isocalendar()[:2]
+        moves_data = remove_partial_data(moves_data, start_date_iso)
+        stop_date_iso = (datetime.utcnow()
+                         + timedelta(days=7)).isocalendar()[:2]
+        while start_date_iso != stop_date_iso:
+            query = MOVES_API_STORY + \
+                     '/{0}-W{1}?trackPoints=true&access_token={2}'.format(
+                        start_date_iso[0],
+                        start_date_iso[1],
+                        moves_access_token
+                     )
+            response = rr.get(query, realms=['moves'])
+            moves_data += response.json()
+            start_date = start_date + timedelta(days=7)
+            start_date_iso = start_date.isocalendar()[:2]
+            print(len(moves_data))
+    except RequestsRespectfulRateLimitedError:
+        print('requeued processing with 60 secs delay')
+        process_moves.apply_async((oh_member.oh_id), countdown=61)
     finally:
-        shutil.rmtree(tempdir)
-
-    # Note: Want to re-run tasks in case of a failure?
-    # You can resubmit a task by calling it again. (Be careful with recursion!)
-    # e.g. to give up, resubmit, & try again after 10s if less than 5 attempts:
-    # if num_submit < 5:
-    #     num_submit += 1
-    #     xfer_to_open_humans.apply_async(
-    #         args=[oh_id, num_submit], kwargs=kwargs, countdown=10)
-    #     return
-
-
-def add_data_to_open_humans(oh_member, tempdir):
-    """
-    Add demonstration file to Open Humans.
-    This might be a good place to start editing, to add your own project data.
-    This template is written to provide the function with a tempdir that
-    will be cleaned up later. You can use the tempdir to stage the creation of
-    files you plan to upload to Open Humans.
-    """
-    # Create example file.
-    data_filepath, data_metadata = make_example_datafile(tempdir)
-
-    # Remove any files with this name previously added to Open Humans.
-    delete_oh_file_by_name(oh_member, filename=os.path.basename(data_filepath))
-
-    # Upload this file to Open Humans.
-    upload_file_to_oh(oh_member, data_filepath, data_metadata)
+        # delete old file and upload new to open humans
+        tmp_directory = tempfile.mkdtemp()
+        metadata = {
+            'description':
+            'Moves GPS maps, locations, and steps data.',
+            'tags': ['GPS', 'Moves', 'steps'],
+            'updated_at': str(datetime.utcnow()),
+            }
+        out_file = os.path.join(tmp_directory, 'moves-storyline-data.json')
+        print('deleted old file if there')
+        api.delete_file(oh_member.access_token,
+                        oh_member.oh_id,
+                        file_basename="moves-storyline-data.json")
+        with open(out_file, 'w') as json_file:
+            json.dump(moves_data, json_file)
+            json_file.flush()
+        api.upload_aws(out_file, metadata,
+                       oh_member.access_token,
+                       project_member_id=oh_member.oh_id)
+        print('uploaded new file')
+        pass
 
 
-def make_datafile(user_data, metadata, tempdir):
-    """
-    Make a user data file in the tempdir.
-    """
-    filename = 'user_data_' + datetime.today().strftime('%Y%m%d')
-    filepath = os.path.join(tempdir, filename)
-
-    with open(filepath, 'w') as f:
-        f.write(user_data)
-
-    return filepath, metadata
-
-
-def make_example_datafile(tempdir):
-    """
-    Make a lorem-ipsum file in the tempdir, for demonstration purposes.
-    """
-    filepath = os.path.join(tempdir, 'example_data.txt')
-    paras = lorem_ipsum.paragraphs(3, common=True)
-    output_text = '\n'.join(['\n'.join(textwrap.wrap(p)) for p in paras])
-    with open(filepath, 'w') as f:
-        f.write(output_text)
-    metadata = {
-        'tags': ['example', 'text', 'demo'],
-        'description': 'File with lorem ipsum text for demonstration purposes',
-    }
-    return filepath, metadata
+def remove_partial_data(moves_data, start_date):
+    remove_indexes = []
+    for i, element in enumerate(moves_data):
+        element_date = datetime.strptime(
+                                element['date'], "%Y%m%d").isocalendar()[:2]
+        if element_date == start_date:
+            remove_indexes.append(i)
+    for index in sorted(remove_indexes, reverse=True):
+        del moves_data[index]
+    return moves_data
 
 
-def delete_oh_file_by_name(oh_member, filename):
-    """
-    Delete all project files matching the filename for this Open Humans member.
-    This deletes files this project previously added to the Open Humans
-    member account, if they match this filename. Read more about file deletion
-    API options here:
-    https://www.openhumans.org/direct-sharing/oauth2-data-upload/#deleting-files
-    """
-    req = requests.post(
-        settings.OH_DELETE_FILES,
-        params={'access_token': oh_member.get_access_token()},
-        data={'project_member_id': oh_member.oh_id,
-              'file_basename': filename})
-    req.raise_for_status()
+def get_start_date(moves_data, moves_access_token):
+    if moves_data == []:
+        url = MOVES_API_BASE + "/user/profile?access_token={}".format(
+                                        moves_access_token
+        )
+        response = rr.get(url, wait=True, realms=['moves'])
+        return response.json()['profile']['firstDate']
+    else:
+        return moves_data[-1]['date']
 
 
-def upload_file_to_oh(oh_member, filepath, metadata):
-    """
-    This demonstrates using the Open Humans "large file" upload process.
-    The small file upload process is simpler, but it can time out. This
-    alternate approach is required for large files, and still appropriate
-    for small files.
-    This process is "direct to S3" using three steps: 1. get S3 target URL from
-    Open Humans, 2. Perform the upload, 3. Notify Open Humans when complete.
-    """
-    # Get the S3 target from Open Humans.
-    upload_url = '{}?access_token={}'.format(
-        settings.OH_DIRECT_UPLOAD, oh_member.get_access_token())
-    req1 = requests.post(
-        upload_url,
-        data={'project_member_id': oh_member.oh_id,
-              'filename': os.path.basename(filepath),
-              'metadata': json.dumps(metadata)})
-    req1.raise_for_status()
-
-    # Upload to S3 target.
-    with open(filepath, 'rb') as fh:
-        req2 = requests.put(url=req1.json()['url'], data=fh)
-    req2.raise_for_status()
-
-    # Report completed upload to Open Humans.
-    complete_url = ('{}?access_token={}'.format(
-        settings.OH_DIRECT_UPLOAD_COMPLETE, oh_member.get_access_token()))
-    req3 = requests.post(
-        complete_url,
-        data={'project_member_id': oh_member.oh_id,
-              'file_id': req1.json()['id']})
-    req3.raise_for_status()
-
-    logger.debug('Upload done: "{}" for member {}.'.format(
-            os.path.basename(filepath), oh_member.oh_id))
+def get_existing_moves(oh_access_token):
+    member = api.exchange_oauth2_member(oh_access_token)
+    for dfile in member['data']:
+        if 'Moves' in dfile['metadata']['tags']:
+            # get file here and read the json into memory
+            tf_in = tempfile.NamedTemporaryFile(suffix='.json')
+            tf_in.write(requests.get(dfile['download_url']).content)
+            tf_in.flush()
+            moves_data = json.load(open(tf_in.name))
+            return moves_data
+    return []

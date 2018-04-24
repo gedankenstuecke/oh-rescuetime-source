@@ -6,4 +6,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('complete/', views.complete, name='complete'),
     path('moves_complete/', views.moves_complete, name='moves_complete'),
+    path('dashboard/', views.dashboard, name='dashboard')
 ]

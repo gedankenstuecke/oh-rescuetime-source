@@ -1,0 +1,17 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block content %}
+
+  <div class="container">
+    <h1>Demo Data Source &rarr; Open Humans</h1>
+    <p class="lead">
+      This is {{oh_member}}
+      {% if moves_member%}
+        {{moves_member}}
+      {% else %}
+      FOOBAR
+      {%endif%}
+    </p>
+  </div>
+
+{% endblock %}

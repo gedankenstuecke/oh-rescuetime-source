@@ -1,9 +1,5 @@
 import logging
 import requests
-import os
-import base64
-import json
-import arrow
 
 from django.contrib.auth import login
 from django.shortcuts import render, redirect
@@ -55,12 +51,28 @@ def complete(request):
                          'redirect_uri={}&client_id={}').format(
                             settings.MOVES_REDIRECT_URI,
                             settings.MOVES_CLIENT_ID)
+            logger.debug(moves_url)
             context['moves_url'] = moves_url
-        return render(request, 'main/complete.html',
-                      context=context)
+            return render(request, 'main/complete.html',
+                          context=context)
+        return redirect("/dashboard")
 
     logger.debug('Invalid code exchange. User returned to starting page.')
     return redirect('/')
+
+
+def dashboard(request):
+    if request.user.is_authenticated:
+        if hasattr(request.user.oh_member, 'datasourcemember'):
+            moves_member = request.user.oh_member.datasourcemember
+        else:
+            moves_member = ''
+        context = {
+            'oh_member': request.user.oh_member,
+            'moves_member': moves_member
+        }
+        return render(request, 'main/dashboard.html',
+                      context=context)
 
 
 def moves_complete(request):
