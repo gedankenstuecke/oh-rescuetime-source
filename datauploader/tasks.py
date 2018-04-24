@@ -32,8 +32,8 @@ def process_moves(oh_id):
     print('Starting moves processing for {}'.format(oh_id))
     oh_member = OpenHumansMember.objects.get(oh_id=oh_id)
     oh_access_token = oh_member.get_access_token(
-                                    client_id=settings.OPENHUMANS_CLIENT_ID,
-                                    client_secret=settings.OPENHUMANS_CLIENT_SECRET)
+                            client_id=settings.OPENHUMANS_CLIENT_ID,
+                            client_secret=settings.OPENHUMANS_CLIENT_SECRET)
     moves_data = get_existing_moves(oh_access_token)
     moves_member = oh_member.datasourcemember
     moves_access_token = moves_member.get_access_token(
