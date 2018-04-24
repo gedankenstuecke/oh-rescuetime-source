@@ -29,7 +29,7 @@ def process_moves(oh_id):
     """
     Update the moves file for a given OH user
     """
-    print('Starting moves processing for {}'.format(oh_id))
+    logger.debug('Starting moves processing for {}'.format(oh_id))
     oh_member = OpenHumansMember.objects.get(oh_id=oh_id)
     oh_access_token = oh_member.get_access_token(
                             client_id=settings.OPENHUMANS_CLIENT_ID,
@@ -61,32 +61,37 @@ def update_moves(oh_member, moves_access_token, moves_data):
             moves_data += response.json()
             start_date = start_date + timedelta(days=7)
             start_date_iso = start_date.isocalendar()[:2]
-            print(len(moves_data))
     except RequestsRespectfulRateLimitedError:
-        print('requeued processing with 60 secs delay')
+        logger.debug(
+            'requeued processing for {} with 60 secs delay'.format(
+                oh_member.oh_id)
+                )
         process_moves.apply_async((oh_member.oh_id), countdown=61)
     finally:
-        # delete old file and upload new to open humans
-        tmp_directory = tempfile.mkdtemp()
-        metadata = {
-            'description':
-            'Moves GPS maps, locations, and steps data.',
-            'tags': ['GPS', 'Moves', 'steps'],
-            'updated_at': str(datetime.utcnow()),
-            }
-        out_file = os.path.join(tmp_directory, 'moves-storyline-data.json')
-        print('deleted old file if there')
-        api.delete_file(oh_member.access_token,
-                        oh_member.oh_id,
-                        file_basename="moves-storyline-data.json")
-        with open(out_file, 'w') as json_file:
-            json.dump(moves_data, json_file)
-            json_file.flush()
-        api.upload_aws(out_file, metadata,
-                       oh_member.access_token,
-                       project_member_id=oh_member.oh_id)
-        print('uploaded new file')
-        pass
+        replace_moves(oh_member)
+
+
+def replace_moves(oh_member, moves_data):
+    # delete old file and upload new to open humans
+    tmp_directory = tempfile.mkdtemp()
+    metadata = {
+        'description':
+        'Moves GPS maps, locations, and steps data.',
+        'tags': ['GPS', 'Moves', 'steps'],
+        'updated_at': str(datetime.utcnow()),
+        }
+    out_file = os.path.join(tmp_directory, 'moves-storyline-data.json')
+    logger.debug('deleted old file for {}'.format(oh_member.oh_id))
+    api.delete_file(oh_member.access_token,
+                    oh_member.oh_id,
+                    file_basename="moves-storyline-data.json")
+    with open(out_file, 'w') as json_file:
+        json.dump(moves_data, json_file)
+        json_file.flush()
+    api.upload_aws(out_file, metadata,
+                   oh_member.access_token,
+                   project_member_id=oh_member.oh_id)
+    logger.debug('uploaded new file for {}'.format(oh_member.oh_id))
 
 
 def remove_partial_data(moves_data, start_date):
