@@ -18,7 +18,7 @@ class DataSourceMember(models.Model):
     """
     user = models.OneToOneField(OpenHumansMember, on_delete=models.CASCADE)
     # Your other fields should go below here
-    moves_id = models.CharField(max_length=16,
+    moves_id = models.CharField(max_length=65,
                                 primary_key=True,
                                 unique=True,
                                 default='')
