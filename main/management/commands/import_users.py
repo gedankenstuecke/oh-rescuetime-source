@@ -3,7 +3,7 @@ from open_humans.models import OpenHumansMember
 from main.models import DataSourceMember
 from django.conf import settings
 from datauploader.tasks import process_moves
-import vcr
+# import vcr
 
 
 class Command(BaseCommand):
