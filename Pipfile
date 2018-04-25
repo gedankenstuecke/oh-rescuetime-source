@@ -25,6 +25,7 @@ open-humans-api = "*"
 
 vcrpy = "*"
 freezegun = "*"
+coverage = "*"
 
 
 [requires]
