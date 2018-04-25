@@ -1,13 +1,14 @@
 import logging
 import requests
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
 from django.conf import settings
 from open_humans.models import OpenHumansMember
 from .models import DataSourceMember
 from .helpers import get_moves_file
 from datauploader.tasks import process_moves
+from ohapi import api
 
 # Set up logging.
 logger = logging.getLogger(__name__)
@@ -67,6 +68,9 @@ def dashboard(request):
         if hasattr(request.user.oh_member, 'datasourcemember'):
             moves_member = request.user.oh_member.datasourcemember
             download_file = get_moves_file(request.user.oh_member)
+            if download_file == 'error':
+                logout(request)
+                return redirect("/")
             connect_url = ''
         else:
             moves_member = ''
@@ -89,9 +93,17 @@ def dashboard(request):
 
 def remove_moves(request):
     if request.method == "POST" and request.user.is_authenticated:
-        moves_account = request.user.oh_member.datasourcemember
-        moves_account.delete()
-        messages.info(request, "Your Moves account has been removed")
+        try:
+            oh_member = request.user.oh_member
+            api.delete_file(oh_member.access_token,
+                            oh_member.oh_id,
+                            file_basename="moves-storyline-data.json")
+            moves_account = request.user.oh_member.datasourcemember
+            moves_account.delete()
+            messages.info(request, "Your Moves account has been removed")
+        except:
+            logout(request)
+            return redirect('/')
     return redirect('/dashboard')
 
 
@@ -100,7 +112,10 @@ def update_data(request):
         oh_member = request.user.oh_member
         process_moves.delay(oh_member.oh_id)
         messages.info(request,
-                      "An update of your Moves data has been started!")
+                      ("An update of your Moves data has been started! "
+                       "It can take some minutes before the first data is "
+                       "available. Reload this page in a while to find your "
+                       "data"))
         return redirect('/dashboard')
 
 
