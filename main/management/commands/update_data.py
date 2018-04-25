@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from main.models import DataSourceMember
+from datauploader.tasks import process_moves
 
 
 class Command(BaseCommand):
@@ -7,7 +8,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = DataSourceMember.objects.all()
-        for user in users:
-            # Uncomment "pass" and add an "update data" or "fetch data" function
-            # that will update a users data.
-            pass
+        for moves_user in users:
+            oh_id = moves_user.user.oh_id
+            process_moves.delay(oh_id)
