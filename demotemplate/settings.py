@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'yoursecretkeyhere')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False if os.getenv('DEBUG', '').lower() == 'false' else True
@@ -59,7 +59,7 @@ MOVES_REDIRECT_URI = os.getenv('MOVES_REDIRECT_URI')
 # Requests Respectful (rate limiting, waiting)
 if REMOTE is True:
     from urllib.parse import urlparse
-    url_object = urlparse(os.getenv('REDIS_URL'))
+    url_object = urlparse(os.getenv('REDIS_URL', 'redis://'))
     logger.info('Connecting to redis at %s:%s',
         url_object.hostname,
         url_object.port)
