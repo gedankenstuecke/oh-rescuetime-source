@@ -60,9 +60,6 @@ MOVES_REDIRECT_URI = os.getenv('MOVES_REDIRECT_URI')
 if REMOTE is True:
     from urllib.parse import urlparse
     url_object = urlparse(os.getenv('REDIS_URL', 'redis://'))
-    logger.info('Connecting to redis at %s:%s',
-        url_object.hostname,
-        url_object.port)
     RespectfulRequester.configure(
         redis={
             "host": url_object.hostname,
