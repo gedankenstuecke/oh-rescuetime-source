@@ -68,7 +68,7 @@ def update_moves(oh_member, moves_access_token, moves_data):
                 )
         process_moves.apply_async((oh_member.oh_id), countdown=61)
     finally:
-        replace_moves(oh_member)
+        replace_moves(oh_member, moves_data)
 
 
 def replace_moves(oh_member, moves_data):

@@ -1,14 +1,13 @@
 import logging
 import requests
-
+from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import render, redirect
 from django.conf import settings
-from datauploader.tasks import xfer_to_open_humans
 from open_humans.models import OpenHumansMember
 from .models import DataSourceMember
-from demotemplate.settings import rr
-
+from .helpers import get_moves_file
+from datauploader.tasks import process_moves
 
 # Set up logging.
 logger = logging.getLogger(__name__)
@@ -18,11 +17,13 @@ def index(request):
     """
     Starting page for app.
     """
+    if request.user.is_authenticated:
+        return redirect('/dashboard')
+    else:
+        context = {'client_id': settings.OPENHUMANS_CLIENT_ID,
+                   'oh_proj_page': settings.OH_ACTIVITY_PAGE}
 
-    context = {'client_id': settings.OPENHUMANS_CLIENT_ID,
-               'oh_proj_page': settings.OH_ACTIVITY_PAGE}
-
-    return render(request, 'main/index.html', context=context)
+        return render(request, 'main/index.html', context=context)
 
 
 def complete(request):
@@ -65,14 +66,42 @@ def dashboard(request):
     if request.user.is_authenticated:
         if hasattr(request.user.oh_member, 'datasourcemember'):
             moves_member = request.user.oh_member.datasourcemember
+            download_file = get_moves_file(request.user.oh_member)
+            connect_url = ''
         else:
             moves_member = ''
+            download_file = ''
+            connect_url = ('https://api.moves-app.com/oauth/v1/authorize?'
+                           'response_type=code&scope=activity location&'
+                           'redirect_uri={}&client_id={}').format(
+                            settings.MOVES_REDIRECT_URI,
+                            settings.MOVES_CLIENT_ID)
         context = {
             'oh_member': request.user.oh_member,
-            'moves_member': moves_member
+            'moves_member': moves_member,
+            'download_file': download_file,
+            'connect_url': connect_url
         }
         return render(request, 'main/dashboard.html',
                       context=context)
+    return redirect("/")
+
+
+def remove_moves(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        moves_account = request.user.oh_member.datasourcemember
+        moves_account.delete()
+        messages.info(request, "Your Moves account has been removed")
+    return redirect('/dashboard')
+
+
+def update_data(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        oh_member = request.user.oh_member
+        process_moves.delay(oh_member.oh_id)
+        messages.info(request,
+                      "An update of your Moves data has been started!")
+        return redirect('/dashboard')
 
 
 def moves_complete(request):
@@ -87,10 +116,14 @@ def moves_complete(request):
     moves_member = moves_code_to_member(code=code, ohmember=ohmember)
 
     if moves_member:
-        return render(request, 'main/moves_complete.html')
+        messages.info(request, "Your Moves account has been connected")
+        process_moves.delay(ohmember.oh_id)
+        return redirect('/dashboard')
 
     logger.debug('Invalid code exchange. User returned to starting page.')
-    return redirect('/')
+    messages.info(request, ("Something went wrong, please try connecting your "
+                            "Moves account again"))
+    return redirect('/dashboard')
 
 
 def moves_code_to_member(code, ohmember):
