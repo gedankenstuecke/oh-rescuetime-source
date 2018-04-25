@@ -1,35 +1,68 @@
-from django.test import TestCase, Client
+from django.test import TestCase
+from freezegun import freeze_time
+from django.conf import settings
+from django.core.management import call_command
 import vcr
 from open_humans.models import OpenHumansMember
-from django.conf import settings
+from main.models import DataSourceMember
 
-FILTERSET = [('access_token', 'ACCESSTOKEN')]
 
-my_vcr = vcr.VCR(path_transformer=vcr.VCR.ensure_suffix('.yaml'),
-                 cassette_library_dir='main/tests/cassettes',
-                 # filter_headers=[('Authorization', 'XXXXXXXX')],
-                 filter_query_parameters=FILTERSET,
-                 filter_post_data_parameters=FILTERSET)
-
-class LoginTestCase(TestCase):
+class ManagementTestCase(TestCase):
     """
-    Test the login logic of the OH API
+    test that files are parsed correctly
     """
 
     def setUp(self):
-        settings.DEBUG = True
-        settings.OPENHUMANS_APP_BASE_URL = "http://127.0.0.1"
-        # self.invalid_token = 'INVALID_TOKEN'
-        # self.master_token = 'ACCESSTOKEN'
-        # self.project_info_url = 'https://www.openhumans.org/api/direct-sharing/project/?access_token={}'
+        settings.OPENHUMANS_CLIENT_ID = 'oh_client_id'
+        settings.OPENHUMANS_CLIENT_SECRET = 'oh_client_secret'
+        settings.MOVES_CLIENT_ID = 'moves_client_id'
+        settings.MOVES_CLIENT_SECRET = 'moves_client_secret'
 
-    # @my_vcr.use_cassette()
-    # def test_complete(self):
-    #     c = Client()
-    #     self.assertEqual(0,
-    #                      OpenHumansMember.objects.all().count())
-    #     response = c.get("/complete", {'code': 'yourcodehere'})
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertTemplateUsed(response, 'main/complete.html')
-    #     self.assertEqual(1,
-    #                      OpenHumansMember.objects.all().count())
+    @freeze_time('2016-06-24')
+    @vcr.use_cassette('main/tests/fixtures/import_users.yaml',
+                      record_mode='none')
+    def test_import_command(self):
+        self.assertEqual(len(OpenHumansMember.objects.all()),
+                         0)
+        self.assertEqual(len(DataSourceMember.objects.all()),
+                         0)
+        call_command('import_users',
+                     infile='main/tests/fixtures/import_list.txt',
+                     delimiter=',')
+        self.assertEqual(len(OpenHumansMember.objects.all()),
+                         1)
+        self.assertEqual(len(DataSourceMember.objects.all()),
+                         1)
+
+
+class UpdateTestCase(TestCase):
+    """
+    test that periodic updates pass
+    """
+
+    def setUp(self):
+        settings.OPENHUMANS_CLIENT_ID = 'oh_client_id'
+        settings.OPENHUMANS_CLIENT_SECRET = 'oh_client_secret'
+        settings.MOVES_CLIENT_ID = 'moves_client_id'
+        settings.MOVES_CLIENT_SECRET = 'moves_client_secret'
+        oh_member = OpenHumansMember.create(
+                            oh_id=23456789,
+                            access_token="new_oh_access_token",
+                            refresh_token="new_oh_refresh_token",
+                            expires_in=36000)
+        oh_member.save()
+        moves_member = DataSourceMember(
+            moves_id=12345678,
+            access_token="new_moves_access_token",
+            refresh_token='new_moves_refresh_token',
+            token_expires=DataSourceMember.get_expiration(
+                36000)
+        )
+        moves_member.user = oh_member
+        moves_member.save()
+
+    @freeze_time('2016-06-24')
+    @vcr.use_cassette('main/tests/fixtures/import_users.yaml',
+                      record_mode='none')
+    def test_update_command(self):
+        call_command('update_data')

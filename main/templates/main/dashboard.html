@@ -1,0 +1,61 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block content %}
+
+  <div class="container">
+    <h1>Welcome back to the <i>Moves</i> integration for <i>Open Humans</i></h1>
+    <p class="lead">
+      You can perform basic management tasks from this page.
+    </p>
+    {% if moves_member%}
+    <div class="row">
+      <div class="col-md-6">
+        <p>
+        A <i>Moves</i> account is connected to your <i>Open Humans</i>
+        right now. You can either disconnect your account or trigger us to
+        update your <i>Moves</i> data (automatic data updates are done periodically,
+        but you might want to have your latest data right now).
+        </p>
+        <form action="{% url 'update_data' %}" method="post">
+          {% csrf_token %}
+          <input type="submit"
+            value="Update Data"
+            style="margin-top:6px;"
+            class="btn btn-primary">
+        </form>
+
+        <form action="{% url 'remove_moves' %}" method="post">
+          {% csrf_token %}
+          <input type="submit"
+            value="Disconnect Moves"
+            style="margin-top:6px;"
+            class="btn btn-danger">
+        </form>
+
+      </div>
+      <div class="col-md-6">
+        <p>
+          You can download a copy of your <i>Moves</i> data from here.
+        </p>
+        <a
+          class="btn btn-success"
+          href="{{download_file}}"
+          >
+          Download <i>Moves</i> Data
+        </a>
+      </div>
+    </div>
+      {% else %}
+      <p class="lead">
+        You haven't connected to <i>Moves</i> yet. click below to get started.
+      </p>
+      <a
+        class="btn btn-primary btn-lg"
+        href="{{connect_url}}"
+        >
+        Connect your <i>Moves</i> account
+      </a>
+      {%endif%}
+  </div>
+
+{% endblock %}

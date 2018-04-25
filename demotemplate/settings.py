@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'yoursecretkeyhere')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False if os.getenv('DEBUG', '').lower() == 'false' else True
@@ -52,10 +52,14 @@ OH_DIRECT_UPLOAD = OH_API_BASE + '/project/files/upload/direct/'
 OH_DIRECT_UPLOAD_COMPLETE = OH_API_BASE + '/project/files/upload/complete/'
 OH_DELETE_FILES = OH_API_BASE + '/project/files/delete/'
 
+MOVES_CLIENT_ID = os.getenv('MOVES_CLIENT_ID')
+MOVES_CLIENT_SECRET = os.getenv('MOVES_CLIENT_SECRET')
+MOVES_REDIRECT_URI = os.getenv('MOVES_REDIRECT_URI')
+
 # Requests Respectful (rate limiting, waiting)
 if REMOTE is True:
     from urllib.parse import urlparse
-    url_object = urlparse(os.getenv('REDIS_URL'))
+    url_object = urlparse(os.getenv('REDIS_URL', 'redis://'))
     logger.info('Connecting to redis at %s:%s',
         url_object.hostname,
         url_object.port)
@@ -70,7 +74,7 @@ if REMOTE is True:
 
 # This creates a Realm called "source" that allows 60 requests per minute maximum.
 rr = RespectfulRequester()
-rr.register_realm("Source", max_requests=60, timespan=60)
+rr.register_realm("moves", max_requests=60, timespan=60)
 
 # Applications installed
 INSTALLED_APPS = [
@@ -97,11 +101,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     # Simplified static file serving.
     # https://warehouse.python.org/project/whitenoise/
     'whitenoise.middleware.WhiteNoiseMiddleware'
-)
+]
 
 ROOT_URLCONF = 'demotemplate.urls'
 
@@ -145,20 +149,20 @@ DATABASES['default'].update(db_from_env)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 UserAttributeSimilarityValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'UserAttributeSimilarityValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 MinimumLengthValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'MinimumLengthValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 CommonPasswordValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'CommonPasswordValidator'),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.\
-                 NumericPasswordValidator',
+        'NAME': ('django.contrib.auth.password_validation.'
+                 'NumericPasswordValidator'),
     },
 ]
 

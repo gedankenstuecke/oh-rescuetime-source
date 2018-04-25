@@ -18,11 +18,14 @@ whitenoise = "*"
 env-tools = "*"
 redis = "*"
 PyYAML = "*"
+open-humans-api = "*"
 
 
 [dev-packages]
 
 vcrpy = "*"
+freezegun = "*"
+coverage = "*"
 
 
 [requires]

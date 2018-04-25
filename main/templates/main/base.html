@@ -13,7 +13,7 @@
     <!-- Uncomment the following if a favicon is added. -->
     <!-- <link rel="icon" type="image/png" href="images/favicon.png"> -->
 
-    <title>Open Humans Data Source</title>
+    <title>Moves integration for Open Humans</title>
 
     <!-- Bootstrap via CDN. -->
     <!-- Latest compiled and minified CSS -->
@@ -29,10 +29,19 @@
   </head>
 
   <body>
+    {% if messages %}
+
+      {% for message in messages %}
+      <div class="alert alert-info" role="alert">
+      {{ message }}
+      </div>
+      {% endfor %}
+
+    {% endif %}
 
     {% block content %}
     {% endblock %}
-  
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
