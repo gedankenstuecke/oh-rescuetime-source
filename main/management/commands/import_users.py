@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
 from open_humans.models import OpenHumansMember
 from main.models import DataSourceMember
-from project_admin.models import ProjectConfiguration
 from django.conf import settings
 from datauploader.tasks import process_moves
+import vcr
 
 
 class Command(BaseCommand):
@@ -15,8 +15,9 @@ class Command(BaseCommand):
         parser.add_argument('--delimiter', type=str,
                             help='CSV delimiter')
 
+    # @vcr.use_cassette('import_users.yaml', decode_compressed_response=True)
+    #                  record_mode='none')
     def handle(self, *args, **options):
-        client_info = ProjectConfiguration.objects.get(id=1).client_info
         for line in open(options['infile']):
             line = line.strip().split(options['delimiter'])
             oh_id = line[0]
@@ -25,17 +26,19 @@ class Command(BaseCommand):
             moves_refresh_token = line[3]
             if len(OpenHumansMember.objects.filter(
                      oh_id=oh_id)) == 0:
-                data = {}
-                data["access_token"] = "mock"
-                data["refresh_token"] = oh_refresh_token
-                data["expires_in"] = -3600
-                oh_member = OpenHumansMember.create(oh_id, data)
-                oh_member._refresh_tokens(**client_info)
+                oh_member = OpenHumansMember.create(
+                                    oh_id=oh_id,
+                                    access_token="mock",
+                                    refresh_token=oh_refresh_token,
+                                    expires_in=-3600)
+                oh_member._refresh_tokens(settings.OPENHUMANS_CLIENT_ID,
+                                          settings.OPENHUMANS_CLIENT_SECRET)
                 moves_member = DataSourceMember(
                     moves_id=moves_id,
                     access_token="mock",
                     refresh_token=moves_refresh_token,
-                    token_expires=-3600
+                    token_expires=DataSourceMember.get_expiration(
+                        -3600)
                 )
                 moves_member.user = oh_member
                 moves_member.save()
@@ -44,3 +47,4 @@ class Command(BaseCommand):
                     client_secret=settings.MOVES_CLIENT_SECRET
                 )
                 process_moves.delay(oh_member.oh_id)
+                # process_moves(oh_member.oh_id)
