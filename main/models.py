@@ -25,6 +25,10 @@ class DataSourceMember(models.Model):
     access_token = models.CharField(max_length=256, default="")
     refresh_token = models.CharField(max_length=256, default="")
     token_expires = models.DateTimeField(default=arrow.now().format())
+    last_updated = models.DateTimeField(
+                            default=(arrow.now() - timedelta(days=7)).format())
+    last_submitted = models.DateTimeField(
+                            default=(arrow.now() - timedelta(days=7)).format())
 
     @staticmethod
     def get_expiration(expires_in):

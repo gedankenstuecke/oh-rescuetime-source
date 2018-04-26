@@ -6,9 +6,10 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from open_humans.models import OpenHumansMember
 from .models import DataSourceMember
-from .helpers import get_moves_file
+from .helpers import get_moves_file, check_update
 from datauploader.tasks import process_moves
 from ohapi import api
+import arrow
 
 # Set up logging.
 logger = logging.getLogger(__name__)
@@ -72,7 +73,9 @@ def dashboard(request):
                 logout(request)
                 return redirect("/")
             connect_url = ''
+            allow_update = check_update(moves_member)
         else:
+            allow_update = False
             moves_member = ''
             download_file = ''
             connect_url = ('https://api.moves-app.com/oauth/v1/authorize?'
@@ -84,7 +87,8 @@ def dashboard(request):
             'oh_member': request.user.oh_member,
             'moves_member': moves_member,
             'download_file': download_file,
-            'connect_url': connect_url
+            'connect_url': connect_url,
+            'allow_update': allow_update
         }
         return render(request, 'main/dashboard.html',
                       context=context)
@@ -104,6 +108,8 @@ def remove_moves(request):
         except:
             moves_account = request.user.oh_member.datasourcemember
             moves_account.delete()
+            messages.info(request, ("Something went wrong, please"
+                          "re-authorize us on Open Humans"))
             logout(request)
             return redirect('/')
     return redirect('/dashboard')
@@ -113,6 +119,9 @@ def update_data(request):
     if request.method == "POST" and request.user.is_authenticated:
         oh_member = request.user.oh_member
         process_moves.delay(oh_member.oh_id)
+        moves_member = oh_member.datasourcemember
+        moves_member.last_submitted = arrow.now().format()
+        moves_member.save()
         messages.info(request,
                       ("An update of your Moves data has been started! "
                        "It can take some minutes before the first data is "

@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from demotemplate.settings import rr
 from requests_respectful import RequestsRespectfulRateLimitedError
 from ohapi import api
+import arrow
 
 # Set up logging.
 logger = logging.getLogger(__name__)
@@ -64,6 +65,10 @@ def update_moves(oh_member, moves_access_token, moves_data):
             moves_data += response.json()
             start_date = start_date + timedelta(days=7)
             start_date_iso = start_date.isocalendar()[:2]
+        print('successfully finished update for {}'.format(oh_member.oh_id))
+        moves_member = oh_member.datasourcemember
+        moves_member.last_updated = arrow.now().format()
+        moves_member.save()
     except RequestsRespectfulRateLimitedError:
         logger.debug(
             'requeued processing for {} with 60 secs delay'.format(
