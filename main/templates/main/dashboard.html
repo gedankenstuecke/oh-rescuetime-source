@@ -12,10 +12,11 @@
       <div class="col-md-6">
         <p>
         A <i>Moves</i> account is connected to your <i>Open Humans</i>
-        right now. You can either disconnect your account or trigger us to
-        update your <i>Moves</i> data (automatic data updates are done periodically,
+        right now. You can trigger an
+        update your <i>Moves</i> data (automatic data updates are done every few days,
         but you might want to have your latest data right now).
         </p>
+        {% if allow_update%}
         <form action="{% url 'update_data' %}" method="post">
           {% csrf_token %}
           <input type="submit"
@@ -23,7 +24,19 @@
             style="margin-top:6px;"
             class="btn btn-primary">
         </form>
-
+        {%else%}
+        <a
+          class="btn btn-default disabled"
+          href="#"
+          >
+          You recently requested data. Please wait 1 hour.
+        </a><br/>
+        <p>Getting the latest data from Moves takes a while and impacts other users too,
+          thus we limit the frequency with which you can request updates.</p>
+        {%endif%}
+        <br/>
+        <p>You want do remove your current Moves account and maybe replace with
+          with a different one? Click below to remove your current Moves account</p>
         <form action="{% url 'remove_moves' %}" method="post">
           {% csrf_token %}
           <input type="submit"
@@ -51,6 +64,8 @@
           >
           No data available yet.
         </a>
+        <p>If you have recently connected your Moves account it can take a bit
+          until we have gathered your data. Please come back later.</p>
         {%endif%}
       </div>
     </div>

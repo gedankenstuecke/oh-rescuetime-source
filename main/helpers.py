@@ -1,5 +1,7 @@
 from ohapi import api
 from django.conf import settings
+import arrow
+from datetime import timedelta
 
 
 def get_moves_file(oh_member):
@@ -15,3 +17,9 @@ def get_moves_file(oh_member):
 
     except:
         return 'error'
+
+
+def check_update(moves_member):
+    if moves_member.last_submitted < (arrow.now() - timedelta(hours=1)):
+        return True
+    return False
