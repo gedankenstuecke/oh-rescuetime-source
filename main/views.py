@@ -98,10 +98,12 @@ def remove_moves(request):
             api.delete_file(oh_member.access_token,
                             oh_member.oh_id,
                             file_basename="moves-storyline-data.json")
+            messages.info(request, "Your Moves account has been removed")
             moves_account = request.user.oh_member.datasourcemember
             moves_account.delete()
-            messages.info(request, "Your Moves account has been removed")
         except:
+            moves_account = request.user.oh_member.datasourcemember
+            moves_account.delete()
             logout(request)
             return redirect('/')
     return redirect('/dashboard')

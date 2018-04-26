@@ -37,11 +37,19 @@
         <p>
           You can download a copy of your <i>Moves</i> data from here.
         </p>
+        {% if download_file %}
         <a
           class="btn btn-success"
           href="{{download_file}}"
           >
           Download <i>Moves</i> Data
+        </a>
+        {%else%}
+        <a
+          class="btn btn-default disabled"
+          href="#"
+          >
+          No data available yet.
         </a>
       </div>
     </div>

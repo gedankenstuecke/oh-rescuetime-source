@@ -51,6 +51,9 @@ def update_moves(oh_member, moves_access_token, moves_data):
         stop_date_iso = (datetime.utcnow()
                          + timedelta(days=7)).isocalendar()[:2]
         while start_date_iso != stop_date_iso:
+            print('processing {}-{} for member {}'.format(start_date_iso[0],
+                                                          start_date_iso[1],
+                                                          oh_member.oh_id))
             query = MOVES_API_STORY + \
                      '/{0}-W{1}?trackPoints=true&access_token={2}'.format(
                         start_date_iso[0],
