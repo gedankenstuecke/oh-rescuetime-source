@@ -32,6 +32,7 @@ class Command(BaseCommand):
                                     expires_in=-3600)
                 oh_member._refresh_tokens(settings.OPENHUMANS_CLIENT_ID,
                                           settings.OPENHUMANS_CLIENT_SECRET)
+                oh_member.save()
                 moves_member = DataSourceMember(
                     access_token="mock",
                     refresh_token=moves_refresh_token,
