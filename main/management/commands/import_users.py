@@ -31,8 +31,8 @@ class Command(BaseCommand):
                                     refresh_token=oh_refresh_token,
                                     expires_in=-3600)
                 oh_member.save()
-                oh_member._refresh_tokens(settings.OPENHUMANS_CLIENT_ID,
-                                          settings.OPENHUMANS_CLIENT_SECRET)
+                oh_member._refresh_tokens(client_id=settings.OPENHUMANS_CLIENT_ID,
+                                          client_secret=settings.OPENHUMANS_CLIENT_SECRET)
                 oh_member = OpenHumansMember.objects.get(oh_id=oh_id)
                 moves_member = DataSourceMember(
                     access_token="mock",
