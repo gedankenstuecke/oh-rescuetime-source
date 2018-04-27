@@ -41,10 +41,10 @@ class Command(BaseCommand):
                         -3600)
                 )
                 moves_member.user = oh_member
+                moves_member.save()
                 moves_member._refresh_tokens(
                     client_id=settings.MOVES_CLIENT_ID,
                     client_secret=settings.MOVES_CLIENT_SECRET
                 )
-                moves_member.save()
                 process_moves.delay(oh_member.oh_id)
                 # process_moves(oh_member.oh_id)
