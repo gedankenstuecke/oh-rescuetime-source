@@ -61,6 +61,7 @@ class DataSourceMember(models.Model):
             auth=requests.auth.HTTPBasicAuth(client_id, client_secret))
         if response.status_code == 200:
             data = response.json()
+            self.moves_id = data['user_id']
             self.access_token = data['access_token']
             self.refresh_token = data['refresh_token']
             self.token_expires = self.get_expiration(data['expires_in'])

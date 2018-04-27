@@ -1,1 +1,1 @@
-23456789,old_oh_refresh_token,12345678,old_moves_refresh_token
+23456789,old_oh_refresh_token,old_moves_refresh_token

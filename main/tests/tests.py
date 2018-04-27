@@ -35,6 +35,8 @@ class ManagementTestCase(TestCase):
                          1)
         self.assertEqual(len(DataSourceMember.objects.all()),
                          1)
+        self.assertEqual(len(DataSourceMember.objects.filter(moves_id=12345678)),
+                         1)
 
 
 class UpdateTestCase(TestCase):
