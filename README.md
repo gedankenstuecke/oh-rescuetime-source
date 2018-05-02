@@ -30,7 +30,7 @@ rr.register_realm("moves", max_requests=60, timespan=60)
 By registering a `realm` we set up a namespace for the moves requests and specify that at max. 60 requests per 60 seconds can be made. If we would make an additional request this would yield a `RequestsRespectfulRateLimitedError`.
 
 ## setup for Celery
-The settings for Celery can be found in `datauploader/celery.py`. These settings apply globally for our application. The Celery task itself can be found in `datauploader/tasks.py`. The main task for requesting & proessing the moves data is `process_moves()` in that file.
+The settings for Celery can be found in `datauploader/celery.py`. These settings apply globally for our application. The Celery task itself can be found in `datauploader/tasks.py`. The main task for requesting & processing the moves data is `process_moves()` in that file.
 
 ## `process_moves()`
 This task solves both the problem of hitting API limits as well as the import of existing data.
@@ -69,7 +69,7 @@ When we hit the Moves API rate limit we can't make any more requests and the exc
 No matter whether we hit the API limit or not: We always want to upload the new data we got from the Moves API back to Open Humans. This way we can incrementally update the data on Open Humans, even if we regularly hit the API limits.
 
 ### Example flow for `process_moves`
-1. we want to download new data for user A and `get_existing_moves` etc. tells us we need data for the weeks 01-10.
+1. We want to download new data for user A and `get_existing_moves` etc. tells us we need data for the weeks 01-10.
 2. We start our API calls and in Week 6 we hit the API limit. We now enqueue a new `process_moves()` task with `Celery`.
 3. We then upload our existing data from week 1-5 to Open Humans. This way a user has at least some data already available
 4. After the countdown has passed our in `2` enqueued `process_moves` task starts.
