@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         users = DataSourceMember.objects.all()
         for moves_user in users:
-            if moves_user.last_submitted < (arrow.now() - timedelta(days=4)):
+            if moves_user.last_updated < (arrow.now() - timedelta(days=4)):
                 oh_id = moves_user.user.oh_id
                 process_moves.delay(oh_id)
             else:
