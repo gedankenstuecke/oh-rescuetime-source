@@ -7,7 +7,7 @@
     <p class="lead">
       You can perform basic management tasks from this page.
     </p>
-    {% if moves_member%}
+    {% if rescuetime_member%}
     <div class="row">
       <div class="col-md-6">
         <p>
@@ -37,10 +37,10 @@
         <br/>
         <p>You want do remove your current Moves account and maybe replace with
           with a different one? Click below to remove your current Moves account</p>
-        <form action="{% url 'remove_moves' %}" method="post">
+        <form action="{% url 'remove_rescuetime' %}" method="post">
           {% csrf_token %}
           <input type="submit"
-            value="Disconnect Moves"
+            value="Disconnect RescueTime"
             style="margin-top:6px;"
             class="btn btn-danger">
         </form>
