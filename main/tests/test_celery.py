@@ -1,4 +1,4 @@
-from datauploader.tasks import process_moves
+from datauploader.tasks import process_rescuetime
 from django.test import TestCase
 from freezegun import freeze_time
 from django.conf import settings
@@ -41,6 +41,6 @@ class CeleryTestCase(TestCase):
                       record_mode='none')
     def test_update_command(self):
         oh_member = OpenHumansMember.objects.get(oh_id=23456789)
-        process_moves(oh_member.oh_id)
+        process_rescuetime(oh_member.oh_id)
         moves_member = DataSourceMember.objects.get(moves_id=12345678)
         self.assertEqual(moves_member.last_updated, arrow.get('2016-06-24'))

@@ -18,13 +18,8 @@ class DataSourceMember(models.Model):
     """
     user = models.OneToOneField(OpenHumansMember, on_delete=models.CASCADE)
     # Your other fields should go below here
-    moves_id = models.CharField(max_length=65,
-                                primary_key=True,
-                                unique=True,
-                                default='')
     access_token = models.CharField(max_length=256, default="")
-    refresh_token = models.CharField(max_length=256, default="")
-    token_expires = models.DateTimeField(default=arrow.now().format())
+    scope = models.CharField(max_length=256, default="")
     last_updated = models.DateTimeField(
                             default=(arrow.now() - timedelta(days=7)).format())
     last_submitted = models.DateTimeField(

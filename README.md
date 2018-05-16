@@ -30,9 +30,9 @@ rr.register_realm("moves", max_requests=60, timespan=60)
 By registering a `realm` we set up a namespace for the moves requests and specify that at max. 60 requests per 60 seconds can be made. If we would make an additional request this would yield a `RequestsRespectfulRateLimitedError`.
 
 ## setup for Celery
-The settings for Celery can be found in `datauploader/celery.py`. These settings apply globally for our application. The Celery task itself can be found in `datauploader/tasks.py`. The main task for requesting & processing the moves data is `process_moves()` in that file.
+The settings for Celery can be found in `datauploader/celery.py`. These settings apply globally for our application. The Celery task itself can be found in `datauploader/tasks.py`. The main task for requesting & processing the moves data is `process_rescuetime()` in that file.
 
-## `process_moves()`
+## `process_rescuetime()`
 This task solves both the problem of hitting API limits as well as the import of existing data.
 The rough workflow is
 
@@ -44,7 +44,7 @@ try:
   while *no_error* and still_new_data:
     get more data
 except:
-  process_moves.async_apply(…,countdown=wait_period)
+  process_rescuetime.async_apply(…,countdown=wait_period)
 finally:
   replace_moves(…)
 ```
@@ -63,22 +63,22 @@ The Moves download works on a ISO-week basis. E.g. we request data for `Calendar
 Here we just run a while loop over our date range beginning from our `start_date` until we hit `today`.
 
 ### `except`
-When we hit the Moves API rate limit we can't make any more requests and the exception will be raised. When this happens we put a new `process_moves` for this user into our `Celery` queue. With the `countdown` parameter we can specify for how long the job should at least be idle before starting again. Ultimately this serves as a cooldown period so that we are allowed new API calls to the `Moves API`.
+When we hit the Moves API rate limit we can't make any more requests and the exception will be raised. When this happens we put a new `process_rescuetime` for this user into our `Celery` queue. With the `countdown` parameter we can specify for how long the job should at least be idle before starting again. Ultimately this serves as a cooldown period so that we are allowed new API calls to the `Moves API`.
 
 ### `finally: replace_moves`
 No matter whether we hit the API limit or not: We always want to upload the new data we got from the Moves API back to Open Humans. This way we can incrementally update the data on Open Humans, even if we regularly hit the API limits.
 
-### Example flow for `process_moves`
+### Example flow for `process_rescuetime`
 1. We want to download new data for user A and `get_existing_moves` etc. tells us we need data for the weeks 01-10.
-2. We start our API calls and in Week 6 we hit the API limit. We now enqueue a new `process_moves()` task with `Celery`.
+2. We start our API calls and in Week 6 we hit the API limit. We now enqueue a new `process_rescuetime()` task with `Celery`.
 3. We then upload our existing data from week 1-5 to Open Humans. This way a user has at least some data already available
-4. After the countdown has passed our in `2` enqueued `process_moves` task starts.
-5. This new task downloads the data from Open Humans and finds it already has data for weeks 1-5. So our new task only needs to download the data for week 5-10. It can now start right in week 5 and either finish without hitting a limit again, or it will at least make it through some more weeks before crashing again, which in turn will trigger yet another new `process_moves` task for later.
+4. After the countdown has passed our in `2` enqueued `process_rescuetime` task starts.
+5. This new task downloads the data from Open Humans and finds it already has data for weeks 1-5. So our new task only needs to download the data for week 5-10. It can now start right in week 5 and either finish without hitting a limit again, or it will at least make it through some more weeks before crashing again, which in turn will trigger yet another new `process_rescuetime` task for later.
 
 ## Doing automatic updates of the Moves data
-This can be done by regularly enqueuing `process_moves` tasks with `Celery`. As `Heroku` does not offer another cheap way of doing it we can use a `management task` for this that will be called daily by the `heroku scheduler`.
+This can be done by regularly enqueuing `process_rescuetime` tasks with `Celery`. As `Heroku` does not offer another cheap way of doing it we can use a `management task` for this that will be called daily by the `heroku scheduler`.
 
-This Management task lives in `main/management/commands/update_data.py`. Each time it is called it iterates over all `Moves` user models and checks when the last update was performed. If the last update happened more than 4 days ago it will put a `process_moves` task into the `Celery` queue.
+This Management task lives in `main/management/commands/update_data.py`. Each time it is called it iterates over all `Moves` user models and checks when the last update was performed. If the last update happened more than 4 days ago it will put a `process_rescuetime` task into the `Celery` queue.
 
 ## Folder structure
 

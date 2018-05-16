@@ -26,7 +26,7 @@ MOVES_API_STORY = MOVES_API_BASE + '/user/storyline/daily'
 
 
 @shared_task
-def process_moves(oh_id):
+def process_rescuetime(oh_id):
     """
     Update the moves file for a given OH user
     """
@@ -74,7 +74,7 @@ def update_moves(oh_member, moves_access_token, moves_data):
             'requeued processing for {} with 60 secs delay'.format(
                 oh_member.oh_id)
                 )
-        process_moves.apply_async(args=[oh_member.oh_id], countdown=61)
+        process_rescuetime.apply_async(args=[oh_member.oh_id], countdown=61)
     finally:
         replace_moves(oh_member, moves_data)
 

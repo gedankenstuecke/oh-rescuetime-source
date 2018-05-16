@@ -119,7 +119,7 @@ def remove_rescuetime(request):
 def update_data(request):
     if request.method == "POST" and request.user.is_authenticated:
         oh_member = request.user.oh_member
-        process_moves.delay(oh_member.oh_id)
+        process_rescuetime.delay(oh_member.oh_id)
         rescuetime_member = oh_member.datasourcemember
         rescuetime_member.last_submitted = arrow.now().format()
         rescuetime_member.save()
@@ -144,7 +144,7 @@ def rescuetime_complete(request):
 
     if rescuetime_member:
         messages.info(request, "Your Rescuetime account has been connected")
-        process_moves.delay(ohmember.oh_id)
+        process_rescuetime.delay(ohmember.oh_id)
         return redirect('/dashboard')
 
     logger.debug('Invalid code exchange. User returned to starting page.')

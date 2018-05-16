@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from open_humans.models import OpenHumansMember
 from main.models import DataSourceMember
 from django.conf import settings
-from datauploader.tasks import process_moves
+from datauploader.tasks import process_rescuetime
 # import vcr
 
 
@@ -45,5 +45,5 @@ class Command(BaseCommand):
                     client_id=settings.MOVES_CLIENT_ID,
                     client_secret=settings.MOVES_CLIENT_SECRET
                 )
-                process_moves.delay(oh_member.oh_id)
-                # process_moves(oh_member.oh_id)
+                process_rescuetime.delay(oh_member.oh_id)
+                # process_rescuetime(oh_member.oh_id)
