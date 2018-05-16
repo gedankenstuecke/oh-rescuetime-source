@@ -32,10 +32,10 @@
             in your Moves phone application. You are all set now!
           </li>
         </ol>
-        {% if client_id %}
         <a
+          {% if client_id %}
           class="btn btn-primary btn-lg"
-          href="https://www.openhumans.org/direct-sharing/projects/oauth2/authorize/?client_id={{ client_id }}&response_type=code"
+          href="https://www.openhumans.org/direct-sharing/projects/oauth2/authorize/?client_id={{ client_id }}&response_type=code&redirect_uri={{ redirect_uri }}"
           {% else %}
           class="btn btn-default disabled"
           {% endif %}
