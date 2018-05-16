@@ -189,8 +189,7 @@ def rescuetime_code_to_member(code, ohmember):
                     access_token=data['access_token'],
                         )
                 rescuetime_member.user = ohmember
-                logger.debug('Member {} created.'.format(
-                    ohmember.project_member_id))
+                logger.debug('Member {} created.'.format(ohmember.oh_id))
                 print('make new rescuetime_member')
             rescuetime_member.save()
 
