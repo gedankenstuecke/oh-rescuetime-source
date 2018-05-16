@@ -52,9 +52,9 @@ OH_DIRECT_UPLOAD = OH_API_BASE + '/project/files/upload/direct/'
 OH_DIRECT_UPLOAD_COMPLETE = OH_API_BASE + '/project/files/upload/complete/'
 OH_DELETE_FILES = OH_API_BASE + '/project/files/delete/'
 
-MOVES_CLIENT_ID = os.getenv('MOVES_CLIENT_ID')
-MOVES_CLIENT_SECRET = os.getenv('MOVES_CLIENT_SECRET')
-MOVES_REDIRECT_URI = os.getenv('MOVES_REDIRECT_URI')
+RESCUETIME_CLIENT_ID = os.getenv('RESCUETIME_CLIENT_ID')
+RESCUETIME_CLIENT_SECRET = os.getenv('RESCUETIME_CLIENT_SECRET')
+RESCUETIME_REDIRECT_URI = os.getenv('RESCUETIME_REDIRECT_URI')
 
 # Requests Respectful (rate limiting, waiting)
 if REMOTE is True:
