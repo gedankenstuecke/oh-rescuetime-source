@@ -16,8 +16,8 @@ class CeleryTestCase(TestCase):
     def setUp(self):
         settings.OPENHUMANS_CLIENT_ID = 'oh_client_id'
         settings.OPENHUMANS_CLIENT_SECRET = 'oh_client_secret'
-        settings.MOVES_CLIENT_ID = 'moves_client_id'
-        settings.MOVES_CLIENT_SECRET = 'moves_client_secret'
+        settings.RESCUETIME_CLIENT_ID = 'moves_client_id'
+        settings.RESCUETIME_CLIENT_SECRET = 'moves_client_secret'
         oh_member = OpenHumansMember.create(
                             oh_id=23456789,
                             access_token="new_oh_access_token",

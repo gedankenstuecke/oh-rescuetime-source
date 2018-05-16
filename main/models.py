@@ -30,8 +30,8 @@ class DataSourceMember(models.Model):
         return (arrow.now() + timedelta(seconds=expires_in)).format()
 
     def get_access_token(self,
-                         client_id=settings.MOVES_CLIENT_ID,
-                         client_secret=settings.MOVES_CLIENT_SECRET):
+                         client_id=settings.RESCUETIME_CLIENT_ID,
+                         client_secret=settings.RESCUETIME_CLIENT_SECRET):
         """
         Return access token. Refresh first if necessary.
         """

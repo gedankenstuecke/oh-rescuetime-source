@@ -42,8 +42,8 @@ class Command(BaseCommand):
                 )
                 moves_member.user = oh_member
                 moves_member._refresh_tokens(
-                    client_id=settings.MOVES_CLIENT_ID,
-                    client_secret=settings.MOVES_CLIENT_SECRET
+                    client_id=settings.RESCUETIME_CLIENT_ID,
+                    client_secret=settings.RESCUETIME_CLIENT_SECRET
                 )
                 process_rescuetime.delay(oh_member.oh_id)
                 # process_rescuetime(oh_member.oh_id)
