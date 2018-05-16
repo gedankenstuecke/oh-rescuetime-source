@@ -10,9 +10,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = DataSourceMember.objects.all()
-        for moves_user in users:
-            if moves_user.last_updated < (arrow.now() - timedelta(days=4)):
-                oh_id = moves_user.user.oh_id
+        for rescuetime_user in users:
+            if rescuetime_user.last_updated < (arrow.now() - timedelta(days=4)):
+                oh_id = rescuetime_user.user.oh_id
                 process_rescuetime.delay(oh_id)
             else:
-                print("didn't update {}".format(moves_user.moves_id))
+                print("didn't update {}".format(rescuetime_user.user.oh_id))

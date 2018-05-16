@@ -1,7 +1,5 @@
 from django.db import models
-from django.conf import settings
 from open_humans.models import OpenHumansMember
-import requests
 from datetime import timedelta
 import arrow
 
@@ -24,40 +22,3 @@ class DataSourceMember(models.Model):
                             default=(arrow.now() - timedelta(days=7)).format())
     last_submitted = models.DateTimeField(
                             default=(arrow.now() - timedelta(days=7)).format())
-
-    @staticmethod
-    def get_expiration(expires_in):
-        return (arrow.now() + timedelta(seconds=expires_in)).format()
-
-    def get_access_token(self,
-                         client_id=settings.RESCUETIME_CLIENT_ID,
-                         client_secret=settings.RESCUETIME_CLIENT_SECRET):
-        """
-        Return access token. Refresh first if necessary.
-        """
-        # Also refresh if nearly expired (less than 60s remaining).
-        delta = timedelta(seconds=60)
-        if arrow.get(self.token_expires) - delta < arrow.now():
-            self._refresh_tokens(client_id=client_id,
-                                 client_secret=client_secret)
-        return self.access_token
-
-    def _refresh_tokens(self, client_id, client_secret):
-        """
-        Refresh access token.
-        """
-        response = requests.post(
-            'https://api.moves-app.com/oauth/v1/access_token?',
-            data={
-                'grant_type': 'refresh_token',
-                'refresh_token': self.refresh_token,
-                'client_id': client_id,
-                'client_secret': client_secret},
-            auth=requests.auth.HTTPBasicAuth(client_id, client_secret))
-        if response.status_code == 200:
-            data = response.json()
-            self.moves_id = data['user_id']
-            self.access_token = data['access_token']
-            self.refresh_token = data['refresh_token']
-            self.token_expires = self.get_expiration(data['expires_in'])
-            self.save()
