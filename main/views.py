@@ -6,8 +6,8 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from open_humans.models import OpenHumansMember
 from .models import DataSourceMember
-from .helpers import get_moves_file, check_update
-from datauploader.tasks import process_moves
+from .helpers import get_rescuetime_file, check_update
+from datauploader.tasks import process_rescuetime
 from ohapi import api
 import arrow
 
@@ -49,13 +49,14 @@ def complete(request):
         context = {'oh_id': oh_member.oh_id,
                    'oh_proj_page': settings.OH_ACTIVITY_PAGE}
         if not hasattr(oh_member, 'datasourcemember'):
-            moves_url = ('https://api.moves-app.com/oauth/v1/authorize?'
-                         'response_type=code&scope=activity location&'
-                         'redirect_uri={}&client_id={}').format(
-                            settings.MOVES_REDIRECT_URI,
-                            settings.MOVES_CLIENT_ID)
-            logger.debug(moves_url)
-            context['moves_url'] = moves_url
+
+            rescuetime_url = ('https://www.rescuetime.com/oauth/authorize?'
+                              'response_type=code&scope=time_data&'
+                              'redirect_uri={}&client_id={}').format(
+                            settings.RESCUETIME_REDIRECT_URI,
+                            settings.RESCUETIME_CLIENT_ID)
+            logger.debug(rescuetime_url)
+            context['rescuetime_url'] = rescuetime_url
             return render(request, 'main/complete.html',
                           context=context)
         return redirect("/dashboard")
@@ -67,25 +68,25 @@ def complete(request):
 def dashboard(request):
     if request.user.is_authenticated:
         if hasattr(request.user.oh_member, 'datasourcemember'):
-            moves_member = request.user.oh_member.datasourcemember
-            download_file = get_moves_file(request.user.oh_member)
+            rescuetime_member = request.user.oh_member.datasourcemember
+            download_file = get_rescuetime_file(request.user.oh_member)
             if download_file == 'error':
                 logout(request)
                 return redirect("/")
             connect_url = ''
-            allow_update = check_update(moves_member)
+            allow_update = check_update(rescuetime_member)
         else:
             allow_update = False
-            moves_member = ''
+            rescuetime_member = ''
             download_file = ''
-            connect_url = ('https://api.moves-app.com/oauth/v1/authorize?'
-                           'response_type=code&scope=activity location&'
+            connect_url = ('https://www.rescuetime.com/oauth/authorize?'
+                           'response_type=code&scope=time_data&'
                            'redirect_uri={}&client_id={}').format(
-                            settings.MOVES_REDIRECT_URI,
-                            settings.MOVES_CLIENT_ID)
+                            settings.RESCUETIME_REDIRECT_URI,
+                            settings.RESCUETIME_CLIENT_ID)
         context = {
             'oh_member': request.user.oh_member,
-            'moves_member': moves_member,
+            'rescuetime_member': rescuetime_member,
             'download_file': download_file,
             'connect_url': connect_url,
             'allow_update': allow_update
@@ -95,19 +96,19 @@ def dashboard(request):
     return redirect("/")
 
 
-def remove_moves(request):
+def remove_rescuetime(request):
     if request.method == "POST" and request.user.is_authenticated:
         try:
             oh_member = request.user.oh_member
             api.delete_file(oh_member.access_token,
                             oh_member.oh_id,
-                            file_basename="moves-storyline-data.json")
-            messages.info(request, "Your Moves account has been removed")
-            moves_account = request.user.oh_member.datasourcemember
-            moves_account.delete()
+                            file_basename="rescuetime.json")
+            messages.info(request, "Your Rescuetime account has been removed")
+            rescuetime_account = request.user.oh_member.datasourcemember
+            rescuetime_account.delete()
         except:
-            moves_account = request.user.oh_member.datasourcemember
-            moves_account.delete()
+            rescuetime_account = request.user.oh_member.datasourcemember
+            rescuetime_account.delete()
             messages.info(request, ("Something went wrong, please"
                           "re-authorize us on Open Humans"))
             logout(request)
@@ -119,93 +120,86 @@ def update_data(request):
     if request.method == "POST" and request.user.is_authenticated:
         oh_member = request.user.oh_member
         process_moves.delay(oh_member.oh_id)
-        moves_member = oh_member.datasourcemember
-        moves_member.last_submitted = arrow.now().format()
-        moves_member.save()
+        rescuetime_member = oh_member.datasourcemember
+        rescuetime_member.last_submitted = arrow.now().format()
+        rescuetime_member.save()
         messages.info(request,
-                      ("An update of your Moves data has been started! "
+                      ("An update of your Rescuetime data has been started! "
                        "It can take some minutes before the first data is "
                        "available. Reload this page in a while to find your "
                        "data"))
         return redirect('/dashboard')
 
 
-def moves_complete(request):
+def rescuetime_complete(request):
     """
-    Receive user from Moves. Store data, start processing.
+    Receive user from Rescuetime. Store data, start processing.
     """
-    logger.debug("Received user returning from Moves.")
+    logger.debug("Received user returning from Rescuetime.")
     # Exchange code for token.
     # This creates an OpenHumansMember and associated user account.
     code = request.GET.get('code', '')
     ohmember = request.user.oh_member
-    moves_member = moves_code_to_member(code=code, ohmember=ohmember)
+    rescuetime_member = rescuetime_code_to_member(code=code, ohmember=ohmember)
 
-    if moves_member:
-        messages.info(request, "Your Moves account has been connected")
+    if rescuetime_member:
+        messages.info(request, "Your Rescuetime account has been connected")
         process_moves.delay(ohmember.oh_id)
         return redirect('/dashboard')
 
     logger.debug('Invalid code exchange. User returned to starting page.')
     messages.info(request, ("Something went wrong, please try connecting your "
-                            "Moves account again"))
+                            "Rescuetime account again"))
     return redirect('/dashboard')
 
 
-def moves_code_to_member(code, ohmember):
+def rescuetime_code_to_member(code, ohmember):
     """
-    Exchange code for token, use this to create and return Moves members.
-    If a matching moves exists, update and return it.
+    Exchange code for token, use this to create and return Rescuetime members.
+    If a matching Rescuetime exists, update and return it.
     """
-    print("FOOBAR.")
-    if settings.MOVES_CLIENT_SECRET and \
-       settings.MOVES_CLIENT_ID and code:
+    if settings.RESCUETIME_CLIENT_SECRET and \
+       settings.RESCUETIME_CLIENT_ID and code:
         data = {
             'grant_type': 'authorization_code',
-            'redirect_uri': settings.MOVES_REDIRECT_URI,
+            'redirect_uri': settings.RESCUETIME_REDIRECT_URI,
             'code': code,
-            'client_id': settings.MOVES_CLIENT_ID,
-            'client_secret': settings.MOVES_CLIENT_SECRET
+            'client_id': settings.RESCUETIME_CLIENT_ID,
+            'client_secret': settings.RESCUETIME_CLIENT_SECRET
         }
         req = requests.post(
-            'https://api.moves-app.com/oauth/v1/access_token'.format(
-                settings.OPENHUMANS_OH_BASE_URL),
+            'https://www.rescuetime.com/oauth/token/',
             data=data
         )
         data = req.json()
         print(data)
         if 'access_token' in data:
             try:
-                moves_member = DataSourceMember.objects.get(
-                    moves_id=data['user_id'])
+                rescuetime_member = DataSourceMember.objects.get(
+                    user=ohmember)
                 logger.debug('Member {} re-authorized.'.format(
-                    moves_member.moves_id))
-                moves_member.access_token = data['access_token']
-                moves_member.refresh_token = data['refresh_token']
-                moves_member.token_expires = DataSourceMember.get_expiration(
-                    data['expires_in'])
-                print('got old moves member')
+                    rescuetime_member.user.project_member_id))
+                rescuetime_member.access_token = data['access_token']
+                rescuetime_member.scope = data['scope']
+                print('got old rescuetime member')
             except DataSourceMember.DoesNotExist:
-                moves_member = DataSourceMember(
-                    moves_id=data['user_id'],
+                rescuetime_member = DataSourceMember(
+                    scope=data['scope'],
                     access_token=data['access_token'],
-                    refresh_token=data['refresh_token'],
-                    token_expires=DataSourceMember.get_expiration(
-                        data['expires_in'])
                         )
-                moves_member.user = ohmember
+                rescuetime_member.user = ohmember
                 logger.debug('Member {} created.'.format(data['user_id']))
-                print('make new moves member')
-            moves_member.save()
+                print('make new rescuetime_member')
+            rescuetime_member.save()
 
-            return moves_member
+            return rescuetime_member
 
         elif 'error' in req.json():
             logger.debug('Error in token exchange: {}'.format(req.json()))
         else:
-            logger.warning('Neither token nor error info in Moves response!')
+            logger.warning('Neither token nor error info in Rescuetime response!')
     else:
-        logger.error('MOVES_CLIENT_SECRET or code are unavailable')
+        logger.error('RESCUETIME_CLIENT_SECRET or code are unavailable')
     return None
 
 
