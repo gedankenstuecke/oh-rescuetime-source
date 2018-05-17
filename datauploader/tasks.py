@@ -38,44 +38,45 @@ def process_rescuetime(oh_id):
     rescuetime_data = get_existing_rescuetime(oh_access_token)
     rescuetime_member = oh_member.datasourcemember
     rescuetime_access_token = rescuetime_member.access_token
+    print('start update_rescuetime')
     update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data)
 
 
 def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
-    try:
-        start_date = get_start_date(rescuetime_data, rescuetime_access_token)
-        rescuetime_data = remove_partial_data(rescuetime_data, start_date)
-        stop_date = datetime.utcnow()
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        counter = 0
-        while start_date < stop_date:
-            print('processing {} for member {}'.format(start_date,
-                                                       oh_member.oh_id))
-            query = RESCUETIME_API + \
-                'access_token={}&restrict_begin={}&restrict_end={}'.format(
-                  rescuetime_access_token,
-                  datetime.strftime(start_date, "%Y-%m-%d"),
-                  datetime.strftime(start_date + timedelta(days=14),
-                                    "%Y-%m-%d"),
-                )
-            response = requests.get(query)
-            response_json = response.json()
-            if rescuetime_data == {}:
-                rescuetime_data = response_json
-            else:
-                rescuetime_data['rows'] += response_json['rows ']
-            start_date = start_date + timedelta(days=15)
-            counter += 1
-            if counter < 5:
-                break
-        print('successfully finished update for {}'.format(oh_member.oh_id))
-        rescuetime_member = oh_member.datasourcemember
-        rescuetime_member.last_updated = arrow.now().format()
-        rescuetime_member.save()
-    except:
-        process_rescuetime.apply_async(args=[oh_member.oh_id], countdown=61)
-    finally:
-        replace_rescuetime(oh_member, rescuetime_data)
+    #try:
+    start_date = get_start_date(rescuetime_data, rescuetime_access_token)
+    rescuetime_data = remove_partial_data(rescuetime_data, start_date)
+    stop_date = datetime.utcnow()
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    counter = 0
+    while start_date < stop_date:
+        print('processing {} for member {}'.format(start_date,
+                                                   oh_member.oh_id))
+        query = RESCUETIME_API + \
+            'access_token={}&restrict_begin={}&restrict_end={}'.format(
+              rescuetime_access_token,
+              datetime.strftime(start_date, "%Y-%m-%d"),
+              datetime.strftime(start_date + timedelta(days=14),
+                                "%Y-%m-%d"),
+            )
+        response = requests.get(query)
+        response_json = response.json()
+        if rescuetime_data == {}:
+            rescuetime_data = response_json
+        else:
+            rescuetime_data['rows'] += response_json['rows ']
+        start_date = start_date + timedelta(days=15)
+        counter += 1
+        if counter < 5:
+            break
+    print('successfully finished update for {}'.format(oh_member.oh_id))
+    rescuetime_member = oh_member.datasourcemember
+    rescuetime_member.last_updated = arrow.now().format()
+    rescuetime_member.save()
+#    except:
+#        process_rescuetime.apply_async(args=[oh_member.oh_id], countdown=61)
+#    finally:
+    replace_rescuetime(oh_member, rescuetime_data)
 
 
 def replace_rescuetime(oh_member, rescuetime_data):
