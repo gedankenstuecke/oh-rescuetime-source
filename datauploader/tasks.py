@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 RESCUETIME_API = ('https://www.rescuetime.com/api/oauth/data'
                   '?perspective=interval&interval=minute&format=json&')
-                  
+
 
 @shared_task
 def process_rescuetime(oh_id):
@@ -62,7 +62,7 @@ def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
                 )
             response = requests.get(query)
             response_json = response.json()
-            if rescuetime_data = {}:
+            if rescuetime_data == {}:
                 rescuetime_data = response_json
             else:
                 rescuetime_data['rows'] += response_json['rows ']
