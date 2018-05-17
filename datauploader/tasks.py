@@ -103,11 +103,13 @@ def replace_rescuetime(oh_member, rescuetime_data):
 
 
 def remove_partial_data(rescuetime_data, start_date):
-    for i, element in enumerate(rescuetime_data['rows']):
-        if element[0][:10] == start_date:
-            final_element = i
-    rescuetime_data['rows'] = rescuetime_data['rows'][:final_element]
-    return rescuetime_data
+    if rescuetime_data != {}:
+        for i, element in enumerate(rescuetime_data['rows']):
+            if element[0][:10] == start_date:
+                final_element = i
+        rescuetime_data['rows'] = rescuetime_data['rows'][:final_element]
+        return rescuetime_data
+    return {}
 
 
 def get_start_date(rescuetime_data, rescuetime_access_token):
