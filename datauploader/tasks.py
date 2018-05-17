@@ -37,9 +37,7 @@ def process_rescuetime(oh_id):
                             client_secret=settings.OPENHUMANS_CLIENT_SECRET)
     rescuetime_data = get_existing_rescuetime(oh_access_token)
     rescuetime_member = oh_member.datasourcemember
-    rescuetime_access_token = rescuetime_member.get_access_token(
-                            client_id=settings.RESCUETIME_CLIENT_ID,
-                            client_secret=settings.RESCUETIME_CLIENT_SECRET)
+    rescuetime_access_token = rescuetime_member.access_token
     update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data)
 
 
