@@ -127,5 +127,7 @@ def get_existing_rescuetime(oh_access_token):
             tf_in.write(requests.get(dfile['download_url']).content)
             tf_in.flush()
             rescuetime_data = json.load(open(tf_in.name))
-            return rescuetime_data
+            if 'rows' in rescuetime_data.keys():
+                if len(rescuetime_data['rows']) > 0:
+                    return rescuetime_data
     return {}
