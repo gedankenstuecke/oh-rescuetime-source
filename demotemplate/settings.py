@@ -71,7 +71,7 @@ if REMOTE is True:
 
 # This creates a Realm called "source" that allows 60 requests per minute maximum.
 rr = RespectfulRequester()
-rr.register_realm("moves", max_requests=60, timespan=60)
+rr.register_realm("rescuetime", max_requests=60, timespan=60)
 
 # Applications installed
 INSTALLED_APPS = [

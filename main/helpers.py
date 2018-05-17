@@ -19,7 +19,7 @@ def get_rescuetime_file(oh_member):
         return 'error'
 
 
-def check_update(moves_member):
-    if moves_member.last_submitted < (arrow.now() - timedelta(hours=1)):
+def check_update(rescuetime_member):
+    if rescuetime_member.last_submitted < (arrow.now() - timedelta(hours=1)):
         return True
     return False
