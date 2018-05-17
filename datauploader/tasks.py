@@ -21,80 +21,86 @@ import arrow
 # Set up logging.
 logger = logging.getLogger(__name__)
 
-MOVES_API_BASE = 'https://api.moves-app.com/api/1.1'
-MOVES_API_STORY = MOVES_API_BASE + '/user/storyline/daily'
+RESCUETIME_API = ('https://www.rescuetime.com/api/oauth/data'
+                  '?perspective=interval&interval=minute&format=json&')
+                  'access_token={}&restrict_begin={}&restrict_end={}'.format(
+                    rescuetime_access_token,
+                    datetime.strftime(start_date, "%Y-%m-%d"),
+                    datetime.strftime(start_date, "%Y-%m-%d"),
+                  )
 
 
 @shared_task
 def process_rescuetime(oh_id):
     """
-    Update the moves file for a given OH user
+    Update the rescuetime file for a given OH user
     """
-    logger.debug('Starting moves processing for {}'.format(oh_id))
+    logger.debug('Starting rescuetime processing for {}'.format(oh_id))
     oh_member = OpenHumansMember.objects.get(oh_id=oh_id)
     oh_access_token = oh_member.get_access_token(
                             client_id=settings.OPENHUMANS_CLIENT_ID,
                             client_secret=settings.OPENHUMANS_CLIENT_SECRET)
-    moves_data = get_existing_moves(oh_access_token)
-    moves_member = oh_member.datasourcemember
-    moves_access_token = moves_member.get_access_token(
+    rescuetime_data = get_existing_rescuetime(oh_access_token)
+    rescuetime_member = oh_member.datasourcemember
+    rescuetime_access_token = rescuetime_member.get_access_token(
                             client_id=settings.RESCUETIME_CLIENT_ID,
                             client_secret=settings.RESCUETIME_CLIENT_SECRET)
-    update_moves(oh_member, moves_access_token, moves_data)
+    update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data)
 
 
-def update_moves(oh_member, moves_access_token, moves_data):
+def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
     try:
-        start_date = get_start_date(moves_data, moves_access_token)
-        start_date = datetime.strptime(start_date, "%Y%m%d")
-        start_date_iso = start_date.isocalendar()[:2]
-        moves_data = remove_partial_data(moves_data, start_date_iso)
-        stop_date_iso = (datetime.utcnow()
-                         + timedelta(days=7)).isocalendar()[:2]
-        while start_date_iso != stop_date_iso:
-            print('processing {}-{} for member {}'.format(start_date_iso[0],
-                                                          start_date_iso[1],
-                                                          oh_member.oh_id))
-            query = MOVES_API_STORY + \
-                     '/{0}-W{1}?trackPoints=true&access_token={2}'.format(
-                        start_date_iso[0],
-                        start_date_iso[1],
-                        moves_access_token
-                     )
-            response = rr.get(query, realms=['moves'])
-            moves_data += response.json()
-            start_date = start_date + timedelta(days=7)
-            start_date_iso = start_date.isocalendar()[:2]
-        print('successfully finished update for {}'.format(oh_member.oh_id))
-        moves_member = oh_member.datasourcemember
-        moves_member.last_updated = arrow.now().format()
-        moves_member.save()
-    except RequestsRespectfulRateLimitedError:
-        logger.debug(
-            'requeued processing for {} with 60 secs delay'.format(
-                oh_member.oh_id)
+        start_date = get_start_date(rescuetime_data, rescuetime_access_token)
+        rescuetime_data = remove_partial_data(rescuetime_data, start_date)
+        stop_date = datetime.utcnow()
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        counter = 0
+        while start_date < stop_date:
+            print('processing {} for member {}'.format(start_date,
+                                                       oh_member.oh_id))
+            query = RESCUETIME_API + \
+                'access_token={}&restrict_begin={}&restrict_end={}'.format(
+                  rescuetime_access_token,
+                  datetime.strftime(start_date, "%Y-%m-%d"),
+                  datetime.strftime(start_date + timedelta(days=14),
+                                    "%Y-%m-%d"),
                 )
+            response = requests.get(query)
+            response_json = response.json()
+            if rescuetime_data = {}:
+                rescuetime_data = response_json
+            else:
+                rescuetime_data['rows'] += response_json['rows ']
+            start_date = start_date + timedelta(days=15)
+            counter += 1
+            if counter < 5:
+                break
+        print('successfully finished update for {}'.format(oh_member.oh_id))
+        rescuetime_member = oh_member.datasourcemember
+        rescuetime_member.last_updated = arrow.now().format()
+        rescuetime_member.save()
+    except:
         process_rescuetime.apply_async(args=[oh_member.oh_id], countdown=61)
     finally:
-        replace_moves(oh_member, moves_data)
+        replace_rescuetime(oh_member, rescuetime_data)
 
 
-def replace_moves(oh_member, moves_data):
+def replace_rescuetime(oh_member, rescuetime_data):
     # delete old file and upload new to open humans
     tmp_directory = tempfile.mkdtemp()
     metadata = {
         'description':
-        'Moves GPS maps, locations, and steps data.',
-        'tags': ['GPS', 'Moves', 'steps'],
+        'RescueTime productivity data.',
+        'tags': ['Rescuetime', 'productivity'],
         'updated_at': str(datetime.utcnow()),
         }
-    out_file = os.path.join(tmp_directory, 'moves-storyline-data.json')
+    out_file = os.path.join(tmp_directory, 'rescuetime.json')
     logger.debug('deleted old file for {}'.format(oh_member.oh_id))
     api.delete_file(oh_member.access_token,
                     oh_member.oh_id,
-                    file_basename="moves-storyline-data.json")
+                    file_basename="rescuetime.json")
     with open(out_file, 'w') as json_file:
-        json.dump(moves_data, json_file)
+        json.dump(rescuetime_data, json_file)
         json_file.flush()
     api.upload_aws(out_file, metadata,
                    oh_member.access_token,
@@ -102,37 +108,34 @@ def replace_moves(oh_member, moves_data):
     logger.debug('uploaded new file for {}'.format(oh_member.oh_id))
 
 
-def remove_partial_data(moves_data, start_date):
-    remove_indexes = []
-    for i, element in enumerate(moves_data):
-        element_date = datetime.strptime(
-                                element['date'], "%Y%m%d").isocalendar()[:2]
-        if element_date == start_date:
-            remove_indexes.append(i)
-    for index in sorted(remove_indexes, reverse=True):
-        del moves_data[index]
-    return moves_data
+def remove_partial_data(rescuetime_data, start_date):
+    for i, element in enumerate(rescuetime_data['rows']):
+        if element[0][:10] == start_date:
+            final_element = i
+    rescuetime_data['rows'] = rescuetime_data['rows'][:final_element]
+    return rescuetime_data
 
 
-def get_start_date(moves_data, moves_access_token):
-    if moves_data == []:
-        url = MOVES_API_BASE + "/user/profile?access_token={}".format(
-                                        moves_access_token
-        )
-        response = rr.get(url, wait=True, realms=['moves'])
-        return response.json()['profile']['firstDate']
+def get_start_date(rescuetime_data, rescuetime_access_token):
+    if rescuetime_data == {}:
+        return "2016-07-01"
+        # url = MOVES_API_BASE + "/user/profile?access_token={}".format(
+        #                                 rescuetime_access_token
+        # )
+        # response = rr.get(url, wait=True, realms=['moves'])
+        # return response.json()['profile']['firstDate']
     else:
-        return moves_data[-1]['date']
+        return rescuetime_data['rows'][-1][0][:10]
 
 
-def get_existing_moves(oh_access_token):
+def get_existing_rescuetime(oh_access_token):
     member = api.exchange_oauth2_member(oh_access_token)
     for dfile in member['data']:
-        if 'Moves' in dfile['metadata']['tags']:
+        if 'Rescuetime' in dfile['metadata']['tags']:
             # get file here and read the json into memory
             tf_in = tempfile.NamedTemporaryFile(suffix='.json')
             tf_in.write(requests.get(dfile['download_url']).content)
             tf_in.flush()
-            moves_data = json.load(open(tf_in.name))
-            return moves_data
-    return []
+            rescuetime_data = json.load(open(tf_in.name))
+            return rescuetime_data
+    return {}
