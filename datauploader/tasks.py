@@ -46,7 +46,6 @@ def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
         rescuetime_data = remove_partial_data(rescuetime_data, start_date)
         stop_date = datetime.utcnow()
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        counter = 0
         while start_date < stop_date:
             print('processing {} for member {}'.format(start_date,
                                                        oh_member.oh_id))
@@ -64,9 +63,6 @@ def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
             else:
                 rescuetime_data['rows'] += response_json['rows']
             start_date = start_date + timedelta(days=15)
-            counter += 1
-            if counter > 5:
-                break
         print('successfully finished update for {}'.format(oh_member.oh_id))
         rescuetime_member = oh_member.datasourcemember
         rescuetime_member.last_updated = arrow.now().format()
