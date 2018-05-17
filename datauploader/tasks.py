@@ -23,12 +23,7 @@ logger = logging.getLogger(__name__)
 
 RESCUETIME_API = ('https://www.rescuetime.com/api/oauth/data'
                   '?perspective=interval&interval=minute&format=json&')
-                  'access_token={}&restrict_begin={}&restrict_end={}'.format(
-                    rescuetime_access_token,
-                    datetime.strftime(start_date, "%Y-%m-%d"),
-                    datetime.strftime(start_date, "%Y-%m-%d"),
-                  )
-
+                  
 
 @shared_task
 def process_rescuetime(oh_id):
