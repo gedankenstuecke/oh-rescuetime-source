@@ -66,7 +66,7 @@ def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
         if rescuetime_data == {}:
             rescuetime_data = response_json
         else:
-            rescuetime_data['rows'] += response_json['rows ']
+            rescuetime_data['rows'] += response_json['rows']
         start_date = start_date + timedelta(days=15)
         counter += 1
         if counter > 5:
