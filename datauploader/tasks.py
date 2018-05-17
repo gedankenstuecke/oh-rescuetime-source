@@ -61,6 +61,8 @@ def update_rescuetime(oh_member, rescuetime_access_token, rescuetime_data):
             )
         response = requests.get(query)
         response_json = response.json()
+        print(rescuetime_data)
+        print(response_json)
         if rescuetime_data == {}:
             rescuetime_data = response_json
         else:
