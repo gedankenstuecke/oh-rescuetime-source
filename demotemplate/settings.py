@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import os
 import dj_database_url
 from env_tools import apply_env
+from env_tools import env_to_bool, get_enforcement_context
 from requests_respectful import RespectfulRequester
 
 apply_env()
@@ -23,16 +24,26 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'yoursecretkeyhere')
+require_env, enforce_required_envs = get_enforcement_context()
+
+HEROKUCONFIG_APP_NAME = os.getenv('HEROKUCONFIG_APP_NAME', '')
+
+if HEROKUCONFIG_APP_NAME:
+    SECRET_KEY = require_env('SECRET_KEY')
+else:
+    SECRET_KEY = os.getenv('SECRET_KEY', 'whopsthereshouldbeone')
+
+# Must come last to catch all missing environment variables
+enforce_required_envs()
+
 INACTIVE_PROJECT = True if os.getenv('INACTIVE_PROJECT', "False").lower() == 'true' else False
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False if os.getenv('DEBUG', '').lower() == 'false' else True
+DEBUG = env_to_bool('DEBUG') and not HEROKUCONFIG_APP_NAME
 
 REMOTE = True if os.getenv('REMOTE', '').lower() == 'true' else False
 
 ALLOWED_HOSTS = ['*']
-
-HEROKUCONFIG_APP_NAME = os.getenv('HEROKUCONFIG_APP_NAME', '')
 
 DEFAULT_BASE_URL = ('https://{}.herokuapp.com'.format(HEROKUCONFIG_APP_NAME) if
                     REMOTE else 'http://127.0.0.1:5000')
