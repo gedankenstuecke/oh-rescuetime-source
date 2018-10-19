@@ -7,7 +7,7 @@ name = "pypi"
 
 [packages]
 
-django = "*"
+Django = "*"
 celery = "*"
 arrow = "*"
 requests = "*"
