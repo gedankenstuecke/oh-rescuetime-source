@@ -26,6 +26,32 @@
         </div>
         <div class="panel panel-default">
           <div class="panel-heading">
+            <h3 class="panel-title">What does this application do?</h3>
+          </div>
+          <div class="panel-body">
+            <p>
+              With this application you can connect your RescueTime account to your <i>Open Humans</i> account. This application will then frequently load your latest RescueTime computer usage data into your Open Humans account.
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">How does it work?</h3>
+          </div>
+          <div class="panel-body">
+          <p>
+            You can log-in into this application with your <i>Open Humans</i> account. This allows us to deposit data in your <i>Open Humans</i> account.
+          </p>
+          <p>
+            You an then also log-in into your RescueTime account. We then store credentials that allow us to use the RescueTime API to access your latest RescueTime computer usage data.
+            This data is then uploaded into your personal Open Humans account.
+          </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <h2>FAQ</h2>
+        <div class="panel panel-default">
+          <div class="panel-heading">
             <h3 class="panel-title">Data management</h3>
           </div>
           <div class="panel-body">
@@ -48,15 +74,17 @@
               <li>the classification you gave to the apps & websites (e.g. "Design", "Entertainment", etc.),</li>
             </ol>
             These data might include your browsing history eg. on dating or porn websites. The details of your logging <a href='https://www.rescuetime.com/accounts/monitoring_options'>depend on your RescueTime settings</a>.
-            Adjust these to minimize the data uploaded through this website.
+            Adjust these to minimize the data uploaded through this website. </br></br>Additionally, this app and its administrator have no interest in snooping in your computer usage records, rather this app only wants to offer a way
+            for people to upload their RescueTime data into their Open Humans account.
           </p>
           <ol>
-            <li>Generally, our hoster <i><a href='https://www.heroku.com'>Heroku</a></i> stores and gives us access to</li>
+            <li>Furthermore, our hoster <i><a href='https://www.heroku.com'>Heroku</a></i> stores and gives us access to</li>
             <ol>
               <li>IP addresses used to access this app</li>
               <li>the sub-pages visited on this app</li>
               <li>(Both are stored for up to a week)</li>
             </ol>
+          </ol>
           <p>
             This app is covered by Open Humans' <a href='https://www.openhumans.org/terms/'>Terms of Use</a> and
             <a href='https://www.openhumans.org/data-use/'>Data Use Policy</a>:
@@ -69,32 +97,6 @@
           </div>
         </div>
       </div>
-      <div class="col-md-7">
-        <h2>FAQ</h2>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">What does this application do?</h3>
-          </div>
-          <div class="panel-body">
-            <p>
-              With this application you can connect your RescueTime account to your <i>Open Humans</i> account. This application will then frequently load your latest RescueTime computer usage data into your Open Humans account.
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">How does it work?</h3>
-          </div>
-          <div class="panel-body">
-          <p>
-            You can log-in into this application with your <i>Open Humans</i> account. This allows us to deposit data in your <i>Open Humans</i> account.
-          </p>
-          <p>
-            You an then also log-in into your RescueTime account. We then store credentials that allow us to use the RescueTime API to access your latest RescueTime computer usage data.
-            This data is then uploaded into your personal Open Humans account.
-          </p>
-          </div>
-        </div>
-  </div>
 </div>
 
 {% endblock %}
