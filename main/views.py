@@ -24,7 +24,8 @@ def index(request):
     else:
         context = {'client_id': settings.OPENHUMANS_CLIENT_ID,
                    'redirect_uri': settings.OPENHUMANS_APP_BASE_URL +'/complete',
-                   'oh_proj_page': settings.OH_ACTIVITY_PAGE}
+                   'oh_proj_page': settings.OH_ACTIVITY_PAGE,
+                   'inactive_project': settings.INACTIVE_PROJECT}
 
         return render(request, 'main/index.html', context=context)
 

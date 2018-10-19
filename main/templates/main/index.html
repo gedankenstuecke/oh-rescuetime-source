@@ -32,6 +32,12 @@
             Once that's done you are all set and we will download your data for you!
           </li>
         </ol>
+        {%if inactive_project%}
+          <div class="alert alert-danger" role="alert">
+            <b>This project is currently awaiting new approval from Open Humans
+            before it can accept data again.</b>
+          </div>
+        {%else%}
         <a
           {% if client_id %}
           class="btn btn-primary btn-lg"
@@ -46,6 +52,7 @@
         <p class="text-muted"><i>
           This button is disabled because client_id hasn't been configured.
         </i></p>
+        {% endif %}
         {% endif %}
       </div>
       <div class='col-md-6'>
@@ -71,7 +78,7 @@
             can read to your RescueTime data. This access will exclusively be used to upload your RescueTime
             data to Open Humans and to debug this integration.
             With the exception of data management within service providers used by this project (e.g. cloud services for the web server),
-            your RescueTime data will not be further accessed by third parties. 
+            your RescueTime data will not be further accessed by third parties.
           After logging in you can also manually trigger an update.</li>
           <li><b>Do you keep my data up to date?</b><br>
             Yes, we regularly update your data to keep it up to date.
