@@ -1,0 +1,100 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block content %}
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-5">
+        <h2>About</h2>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Who's running this?</h3>
+          </div>
+          <div class="panel-body">
+          <p>
+            This project is run by <a href="http://www.tzovar.as">Bastian Greshake Tzovaras</a> as a hobby project.</li>
+            He can be reached via email at bgreshake@googlemail.com or
+            even quicker by messaging him <a href="https://www.twitter.com/gedankenstuecke">@gedankenstuecke</a> on Twitter.
+          </p>
+          <p>
+            See this project's page on Open Humans:<br><a href='https://www.openhumans.org/activity/rescuetime-connection/'>https://www.openhumans.org/activity/rescuetime-connection/</a>
+          </p>
+          <p>
+            See this app's code on GitHub:<br><a href='https://github.com/gedankenstuecke/oh-rescuetime-source'>https://github.com/gedankenstuecke/oh-rescuetime-source</a>
+          </p>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Data management</h3>
+          </div>
+          <div class="panel-body">
+          <p>
+            When you log in into this app we store access credentials used to access your <i>Open Humans</i> account. These credentials allow the application to
+            <ol>
+              <li>upload data into your Open Humans account</li>
+              <li>access data in your Open Humans account that has been uploaded by this integration</li>
+              <li>message you through Open Humans.</li>
+            </ol>
+          </p>
+          <p>
+            When you log in into your RescueTime account through this app we store the access credentials used to access your <i>RescueTime</i> account. These credentials allow the application to read all of your data that's stored on RescueTime.
+            Depending on your settings this can include:
+            <ol>
+              <li>which applications you use on your computer an when,</li>
+              <li>the websites you use as recorded through RescueTime,</li>
+              <li>the titles of windows and documents you have used,</li>
+              <li>details on your email programs and webmail,</li>
+              <li>the classification you gave to the apps & websites (e.g. "Design", "Entertainment", etc.),</li>
+            </ol>
+            These data might include your browsing history eg. on dating or porn websites. The details of your logging <a href='https://www.rescuetime.com/accounts/monitoring_options'>depend on your RescueTime settings</a>.
+            Adjust these to minimize the data uploaded through this website.
+          </p>
+          <ol>
+            <li>Generally, our hoster <i><a href='https://www.heroku.com'>Heroku</a></i> stores and gives us access to</li>
+            <ol>
+              <li>IP addresses used to access this app</li>
+              <li>the sub-pages visited on this app</li>
+              <li>(Both are stored for up to a week)</li>
+            </ol>
+          <p>
+            This app is covered by Open Humans' <a href='https://www.openhumans.org/terms/'>Terms of Use</a> and
+            <a href='https://www.openhumans.org/data-use/'>Data Use Policy</a>:
+          </p>
+          <p>
+            You can always delete your <i>RescueTime</i> credentials from your Dashboard, this will remove this app's ability to get new RescueTime data.
+            You can also always <a href='https://www.openhumans.org/activity/rescuetime-connection'>deauthorize this application on the <i>Open Humans</i> settings of this application</a>.
+            This will invalidate the credentials used to read and write data to your <i>Open Humans</i> account, removing this apps ability to read RescueTime data already stored in your Open Humans account and the the ability to upload newer data.
+          </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <h2>FAQ</h2>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">What does this application do?</h3>
+          </div>
+          <div class="panel-body">
+            <p>
+              With this application you can connect your RescueTime account to your <i>Open Humans</i> account. This application will then frequently load your latest RescueTime computer usage data into your Open Humans account.
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">How does it work?</h3>
+          </div>
+          <div class="panel-body">
+          <p>
+            You can log-in into this application with your <i>Open Humans</i> account. This allows us to deposit data in your <i>Open Humans</i> account.
+          </p>
+          <p>
+            You an then also log-in into your RescueTime account. We then store credentials that allow us to use the RescueTime API to access your latest RescueTime computer usage data.
+            This data is then uploaded into your personal Open Humans account.
+          </p>
+          </div>
+        </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -11,7 +11,7 @@
     </p>
     <p class="lead">
       Learn more by visiting our
-      <a href="{{ oh_proj_page }}">page on Open Humans</a>.
+      <a href="{% url 'about' %}">About Page</a>.
     </p>
     <div class="row">
       <div class="col-md-6">
@@ -61,8 +61,9 @@
           <li><b>Which data will be included from RescueTime?</b><br>
             <b>The short answer</b>: It depends on your <i>RescueTime</i> settings.<br>
             <b>The longer answer</b>: Which data will be collected by <i>RescueTime</i> can be adjusted
-            in the RescueTime settings.
+            in the RescueTime settings.</br>
             If you have set it up that way <b>your data might contain information about visited websites & information about your emails</b>.
+            By default <i>RescueTime</i> tries to not log any porn sites you are surfing at though.
           </li>
           <li><b>Will my data from RescueTime be public?</b><br>
             <b>The short answer</b>: No, by connecting your RescueTime account you don't agree
@@ -74,9 +75,9 @@
             through the public data feature</a>.
           </li>
           <li><b>Are you getting access to my RescueTime data during the upload?</b><br>
-            Yes, by connecting your RescueTime account to this application the administrator(s) of this integration (see below)
+            Yes, by connecting your RescueTime account to this application the administrator of this integration (see below)
             can read to your RescueTime data. This access will exclusively be used to upload your RescueTime
-            data to Open Humans and to debug this integration.
+            data to Open Humans and to debug this integration. The administrator will not look into your computer usage or analyze it, etc.
             With the exception of data management within service providers used by this project (e.g. cloud services for the web server),
             your RescueTime data will not be further accessed by third parties.
           After logging in you can also manually trigger an update.</li>
@@ -84,10 +85,10 @@
             Yes, we regularly update your data to keep it up to date.
           After logging in you can also manually trigger an update.</li>
           <li><b>Who's running this project?</b><br>
-            This project is run by <a href="http://www.ruleofthirds.de">Bastian Greshake Tzovaras</a>.</li>
-          <li><b>How can I be in touch with you?</b><br>
+            This project is run by <a href="http://www.tzovar.as">Bastian Greshake Tzovaras</a> as a hobby project.</li>
+          <li><b>How can I get in touch with you?</b><br>
             You can reach me via email at bgreshake@googlemail.com or
-            even quicker <a href="https://www.twitter.com/gedankenstuecke">@gedankenstuecke</a> on Twitter.
+            even quicker by messaging me <a href="https://www.twitter.com/gedankenstuecke">@gedankenstuecke</a> on Twitter.
           </li>
         </ol>
       </div>

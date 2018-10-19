@@ -30,6 +30,13 @@ def index(request):
         return render(request, 'main/index.html', context=context)
 
 
+def about(request):
+    """
+    About page
+    """
+    return render(request, 'main/about.html')
+
+
 def complete(request):
     """
     Receive user from Open Humans. Store data, start upload.
