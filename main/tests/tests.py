@@ -30,8 +30,6 @@ class UpdateTestCase(TestCase):
             moves_id=12345678,
             access_token="new_moves_access_token",
             refresh_token='new_moves_refresh_token',
-            token_expires=DataSourceMember.get_expiration(
-                36000),
             last_updated=arrow.get('2016-06-19').format(),
             last_submitted=arrow.get('2016-06-19').format()
         )
