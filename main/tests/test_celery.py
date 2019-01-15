@@ -25,9 +25,7 @@ class CeleryTestCase(TestCase):
                             expires_in=36000)
         oh_member.save()
         moves_member = DataSourceMember(
-            moves_id=12345678,
             access_token="new_moves_access_token",
-            refresh_token='new_moves_refresh_token',
             last_updated=arrow.get('2016-06-19').format(),
             last_submitted=arrow.get('2016-06-19').format()
         )
@@ -40,5 +38,5 @@ class CeleryTestCase(TestCase):
     def test_update_command(self):
         oh_member = OpenHumansMember.objects.get(oh_id=23456789)
         process_rescuetime(oh_member.oh_id)
-        moves_member = DataSourceMember.objects.get(moves_id=12345678)
+        moves_member = oh_member.datasourcemember
         self.assertEqual(moves_member.last_updated, arrow.get('2016-06-24'))
